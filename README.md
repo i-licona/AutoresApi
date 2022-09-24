@@ -18,3 +18,4 @@ si sale exitoso aplicar el sigueinte comando
 
 si todo sale correctamente aplicar el siguiente comando
   dotnet run
+*******************************************************
