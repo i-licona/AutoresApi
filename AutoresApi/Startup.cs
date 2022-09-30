@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using AutoresApi.Servicios;
+using AutoresApi.Utilities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -74,16 +77,23 @@ namespace AutoresApi
                 opciones.AddPolicy("Es admin", politica => politica.RequireClaim("esAdmin"));
                 opciones.AddPolicy("Es vendedor", politica => politica.RequireClaim("esVendedor"));
             });
+            services.AddDataProtection();
+            services.AddTransient<HashService>();
             services.AddCors(opciones =>
             {
                 opciones.AddDefaultPolicy(builder =>
                 {
                     //allow any origin
-                    //builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders();
+                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders();
                     //allow specific origin
-                    builder.WithOrigins("https://www.apirequest.io").AllowAnyMethod().AllowAnyHeader().WithExposedHeaders();
+                    //builder.WithOrigins("https://www.apirequest.io").AllowAnyMethod().AllowAnyHeader().WithExposedHeaders();
                 });
             });
+
+            services.AddTransient<GeneradorEnlaces>();
+            services.AddTransient<HATEOASAuthorFilterAttribute>();
+            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

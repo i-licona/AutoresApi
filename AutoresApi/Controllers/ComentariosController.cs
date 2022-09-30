@@ -20,7 +20,7 @@ namespace AutoresApi.Controllers
             this.context = context;
             this.mapper = mapper;
         }
-        [HttpPost]
+        [HttpPost("createCommit", Name = "createCommit")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult> Post(int libroId, ComentarioCrear comentarioDTO)
         {
@@ -35,9 +35,9 @@ namespace AutoresApi.Controllers
             context.Add(comentario);
             await context.SaveChangesAsync();
             var comentDTO = mapper.Map<ComentarioDTO>(comentario);
-            return CreatedAtRoute("getCommit", new { id= comentario.Id, libroId = comentario.LibroId }, comentDTO);
+            return CreatedAtRoute("getCommitById", new { id= comentario.Id, libroId = comentario.LibroId }, comentDTO);
         }
-        [HttpGet]
+        [HttpGet("getCommits", Name = "getCommits")]
         public async Task<ActionResult<List<ComentarioDTO>>> Get(int libroId)
         {
             var existeLibro = await context.Libros.AnyAsync(libro => libro.Id == libroId);
@@ -50,7 +50,7 @@ namespace AutoresApi.Controllers
             var comentarios = await context.Comentarios.Where(comentario => comentario.LibroId == libroId).ToListAsync();
             return mapper.Map<List<ComentarioDTO>>(comentarios);
         }
-        [HttpGet("{id}", Name ="getCommit")]
+        [HttpGet("getCommitById/{id}", Name = "getCommitById")]
         public async Task<ActionResult<ComentarioDTO>> GetById([FromRoute] int id)
         {
             var comentario = await context.Comentarios.FirstOrDefaultAsync(x => x.Id == id);
@@ -62,7 +62,7 @@ namespace AutoresApi.Controllers
             return mapper.Map<ComentarioDTO>(comentario);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("updateCommit/{id}", Name = "updateCommit")]
         public async Task<ActionResult> Put(int libroId, int id, ComentarioCrear comentarioDTO)
         {
             var existeLibro = await context.Libros.AnyAsync(libro => libro.Id == libroId);

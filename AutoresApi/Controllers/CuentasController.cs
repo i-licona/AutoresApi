@@ -9,6 +9,8 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
+using AutoresApi.Servicios;
 
 namespace AutoresApi.Controllers
 {
@@ -19,18 +21,69 @@ namespace AutoresApi.Controllers
         private readonly UserManager<IdentityUser> userManager;
         private readonly IConfiguration configuration;
         private readonly SignInManager<IdentityUser> signInManager;
+        private readonly HashService hashService;
+        private readonly IDataProtector dataProtector;
 
         public CuentasController(
             UserManager<IdentityUser> userManager,
             IConfiguration configuration,
-            SignInManager<IdentityUser> signInManager
+            SignInManager<IdentityUser> signInManager,
+            IDataProtectionProvider dataProtectionProvider,
+            HashService hashService
         )
         {
             this.userManager = userManager;
             this.configuration = configuration;
             this.signInManager = signInManager;
+            this.hashService = hashService;
+            dataProtector = dataProtectionProvider.CreateProtector("valor_unico_y_secreto");
+            
         }
-        [HttpPost("registrar")]
+
+        [HttpGet("hash/{textoPlano}")]
+        public ActionResult RealizarHash(string textoPlano)
+        {
+            var resultado1 = this.hashService.Hash(textoPlano);
+            var resultado2 = this.hashService.Hash(textoPlano);
+
+            return Ok(new {
+                resultado1 = resultado1,
+                resultado2 = resultado2 
+            });
+
+        }
+
+        [HttpGet("encriptar")]
+        public ActionResult Encriptar()
+        {
+            var textoPlano = "Jose Ignacio";
+            var textoCifrado = dataProtector.Protect(textoPlano); 
+            var textoDesencriptado = dataProtector.Unprotect(textoCifrado);
+            return Ok(new
+            {
+                textoPlano = textoPlano,
+                textoCifrado = textoCifrado,
+                textoDesencriptado = textoDesencriptado,
+            });
+        }
+
+        [HttpGet("encriptar-por-tiempo")]
+        public ActionResult EncriptarPorTiempo()
+        {
+            var protectorLimitadoPorTiempo = dataProtector.ToTimeLimitedDataProtector();
+            var textoPlano = "Jose Ignacio";
+            var textoCifrado = protectorLimitadoPorTiempo.Protect(textoPlano,lifetime:TimeSpan.FromSeconds(5));
+            Thread.Sleep(6000);
+            var textoDesencriptado = protectorLimitadoPorTiempo.Unprotect(textoCifrado);
+            return Ok(new
+            {
+                textoPlano = textoPlano,
+                textoCifrado = textoCifrado,
+                textoDesencriptado = textoDesencriptado,
+            });
+        }
+
+        [HttpPost("createAcount", Name = "createAcount")]
         public async Task<ActionResult<RespuestaAutenticacion>> Registrar(CredencialesUsuario credenciales)
         {
             var usuario = new IdentityUser { UserName = credenciales.Email, Email = credenciales.Email };
@@ -44,7 +97,7 @@ namespace AutoresApi.Controllers
                 return BadRequest(resultado.Errors);
             }
         }
-        [HttpPost("login")]
+        [HttpPost("login", Name = "login")]
         public async Task<ActionResult<RespuestaAutenticacion>> Login(CredencialesUsuario credenciales)
         {
             var result = await signInManager.PasswordSignInAsync(credenciales.Email, credenciales.Password, isPersistent: false, lockoutOnFailure: false);
@@ -58,7 +111,7 @@ namespace AutoresApi.Controllers
             }
         }
 
-        [HttpGet("renovarToken")]
+        [HttpGet("refreshToken", Name = "refreshToken")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult<RespuestaAutenticacion>> Renovar()
         {
@@ -76,7 +129,7 @@ namespace AutoresApi.Controllers
             return BadRequest();
         }
 
-        [HttpPost("hacerAdmin")]
+        [HttpPost("doAdmin", Name = "doAdmin")]
         
         public async Task<ActionResult> HacerAdmin(EditarAdminDTO editarAdminDTO)
         {
@@ -85,7 +138,7 @@ namespace AutoresApi.Controllers
             return NoContent();
         }
         
-        [HttpPost("removerAdmin")]
+        [HttpPost("removeAdmin", Name = "removeAdmin")]
         public async Task<ActionResult> RemoverAdmin(EditarAdminDTO editarAdminDTO)
         {
             var usuario = await userManager.FindByEmailAsync(editarAdminDTO.Email);
@@ -114,8 +167,10 @@ namespace AutoresApi.Controllers
             return new RespuestaAutenticacion()
             {
                 Token = new JwtSecurityTokenHandler().WriteToken(securityToken),
-                Expiracion = expiracion
+                Expiracion = expiracion,
+                Rol = claimsDB
             };
+            
         }
     }
 }

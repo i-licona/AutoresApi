@@ -11,6 +11,7 @@ using AutoresApi.DTOs;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using AutoresApi.Utilities;
 
 namespace AutoresApi.Controllers
 {
@@ -22,30 +23,41 @@ namespace AutoresApi.Controllers
         private readonly AplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration configuration;
+        private readonly IAuthorizationService authorizationService;
 
-        public AutorController(AplicationDbContext context, IMapper mapper, IConfiguration configuration)
+        public AutorController(
+            AplicationDbContext context, 
+            IMapper mapper, 
+            IConfiguration configuration,
+            IAuthorizationService authorizationService
+        )
         {
             _context = context;
             _mapper = mapper;
             this.configuration = configuration;
+            this.authorizationService = authorizationService;
         }
 
         // GET: api/Autor
-        [HttpGet]
+        [HttpGet("getAuthors", Name = "getAuthors")]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<AutorDTO>>> GetAutores()
+        [ServiceFilter(typeof(HATEOASAuthorFilterAttribute))]
+        public async Task<ActionResult<List<AutorDTO>>> GetAutores([FromHeader] string? incluirHATEOAS)
         {
           if (_context.Autores == null)
           {
               return NotFound();
           }
-            var autores =  await _context.Autores.ToListAsync();
-            return Ok(_mapper.Map<IEnumerable<AutorDTO>>(autores));
+            var  autores =  await _context.Autores.ToListAsync();
+            var result = _mapper.Map<List<AutorDTO>>(autores);
+            return Ok(result);
         }
 
         // GET: api/Autor/5
-        [HttpGet("{id}",Name ="getAutorById")]
-        public async Task<ActionResult<AutorDTOConLibros>> GetAutor(int id)
+        [HttpGet("getAuthorById/{id}", Name = "getAuthorById")]
+        [AllowAnonymous]
+        [ServiceFilter(typeof(HATEOASAuthorFilterAttribute))]
+        public async Task<ActionResult<AutorDTOConLibros>> GetAutor(int id, [FromHeader] string? incluirHATEOAS)
         {
             if (_context.Autores == null)
             {
@@ -58,9 +70,11 @@ namespace AutoresApi.Controllers
                 return NotFound();
             }
 
-            return _mapper.Map<AutorDTOConLibros>(autor);
+            var dto =  _mapper.Map<AutorDTOConLibros>(autor);
+            return dto;
         }
-        [HttpGet("buscar-por-nombre/{nombre}")]
+
+        [HttpGet("getAuthorByName/{nombre}", Name = "getAuthorByName")]
         public async Task<ActionResult<List<AutorDTO>>> GetAutor([FromRoute] string nombre)
         {
             var autores = await _context.Autores.Where(x => x.Nombre.Contains(nombre)).ToListAsync();
@@ -75,7 +89,7 @@ namespace AutoresApi.Controllers
 
         // PUT: api/Autor/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        [HttpPut("updateAuthor/{id}", Name = "updateAuthor")]
         public async Task<IActionResult> PutAutor(int id, CrearAutorDTO autorDTO)
         {
             var existe = await _context.Autores.AnyAsync(x => x.Id == id);
@@ -107,7 +121,7 @@ namespace AutoresApi.Controllers
 
         // POST: api/Autor
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("createAuthor", Name = "createAuthor")]
         public async Task<ActionResult> PostAutor([FromBody] CrearAutorDTO crearAutorDTO)
         {
             var validateExist = await _context.Autores.AnyAsync(x => x.Nombre == crearAutorDTO.Nombre);
@@ -118,11 +132,11 @@ namespace AutoresApi.Controllers
             _context.Add(autor);
              await _context.SaveChangesAsync();
             var autorDTO = _mapper.Map<AutorDTO>(autor);
-            return CreatedAtRoute("getAutorById", new { id = autor.Id}, autorDTO);
+            return CreatedAtRoute("getAuthorById", new { id = autor.Id}, autorDTO);
         }
 
         // DELETE: api/Autor/5
-        [HttpDelete("{id}")]
+        [HttpDelete("deleteAuthor/{id}", Name = "deleteAuthor")]
         public async Task<IActionResult> DeleteAutor(int id)
         {
             var existe = await _context.Autores.AnyAsync(x => x.Id == id);
@@ -138,6 +152,6 @@ namespace AutoresApi.Controllers
         private bool AutorExists(int id)
         {
             return (_context.Autores?.Any(e => e.Id == id)).GetValueOrDefault();
-        } 
+        }
     }
 }

@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.JsonPatch;
 
 namespace AutoresApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/libro")]
     [ApiController]
     public class LibroController : ControllerBase
     {
@@ -27,7 +27,7 @@ namespace AutoresApi.Controllers
         }
 
         // GET: api/Libro
-        [HttpGet]
+        [HttpGet("getBooks", Name = "getBooks")]
         public async Task<ActionResult<IEnumerable<LibroDTO>>> GetLibros()
         {
             if (_context.Libros == null)
@@ -39,7 +39,7 @@ namespace AutoresApi.Controllers
         }
 
         // GET: api/Libro/5
-        [HttpGet("{id}", Name = "getBook")]
+        [HttpGet("getBookById/{id}", Name = "getBookById")]
         public async Task<ActionResult<LibroDTOConAutores>> GetLibro(int id)
         {
             if (_context.Libros == null)
@@ -60,7 +60,7 @@ namespace AutoresApi.Controllers
 
         // PUT: api/Libro/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        [HttpPut("updateBook/{id}", Name = "updateBook")]
         public async Task<IActionResult> PutLibro(int id, LibroCrearDTO libroDTO)
         {
             var libroDB = await _context.Libros.Include(x => x.AutoresLibros).FirstOrDefaultAsync(x => x.Id == id);
@@ -76,7 +76,7 @@ namespace AutoresApi.Controllers
         }
 
         // POST: api/Libro
-        [HttpPost]
+        [HttpPost("createBook", Name = "createBook")]
         public async Task<ActionResult<LibroCrearDTO>> PostLibro(LibroCrearDTO libroCrearDTO)
         {
             if (libroCrearDTO.AutoresIds == null)
@@ -97,11 +97,11 @@ namespace AutoresApi.Controllers
             _context.Libros.Add(libro);
             await _context.SaveChangesAsync();
             var libroDTO = _mapper.Map<LibroDTO>(libro);
-            return CreatedAtRoute("getBook", new { id = libro.Id }, libroDTO);
+            return CreatedAtRoute("getBookById", new { id = libro.Id }, libroDTO);
         }
 
         // DELETE: api/Libro/5
-        [HttpDelete("{id}")]
+        [HttpDelete("deleteBook/{id}", Name = "deleteBook")]
         public async Task<IActionResult> DeleteLibro(int id)
         {
             var existe = await _context.Libros.AnyAsync(x => x.Id == id);
@@ -120,7 +120,7 @@ namespace AutoresApi.Controllers
             return (_context.Libros?.Any(e => e.Id == id)).GetValueOrDefault();
         }
 
-        [HttpPatch("{id}")] 
+        [HttpPatch("patchBook/{id}", Name = "patchBook")] 
         public async Task<ActionResult> PatchLibro(int id, JsonPatchDocument<LibroPatchDTO> patchDocument)
         {
             if (patchDocument == null)
