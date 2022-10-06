@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AutoresApi.Controllers
+namespace AutoresApi.Controllers.V1
 {
 
     [ApiController]
-    [Route("api")]
+    [Route("api/v1")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class RootController:ControllerBase
+    public class RootController : ControllerBase
     {
         public RootController(IAuthorizationService authorizationService)
         {
@@ -24,9 +24,9 @@ namespace AutoresApi.Controllers
         {
             var datosHateoas = new List<DatoHATEOAS>();
 
-            var esAdmin = await this.AuthorizationService.AuthorizeAsync(User, "Es admin");
+            var esAdmin = await AuthorizationService.AuthorizeAsync(User, "Es admin");
 
-            datosHateoas.Add(new DatoHATEOAS(enlace: Url.Link(routeName: "getRoot", new {}), descripcion: "self", metodo: "GET"));
+            datosHateoas.Add(new DatoHATEOAS(enlace: Url.Link(routeName: "getRoot", new { }), descripcion: "self", metodo: "GET"));
 
             datosHateoas.Add(new DatoHATEOAS(enlace: Url.Link(routeName: "getAuthors", new { }), descripcion: "get-authors", metodo: "GET"));
 
@@ -34,9 +34,9 @@ namespace AutoresApi.Controllers
             {
                 datosHateoas.Add(new DatoHATEOAS(enlace: Url.Link(routeName: "createAuthor", new { }), descripcion: "post-authors", metodo: "POST"));
             }
-           
+
 
             return datosHateoas;
-        } 
+        }
     }
 }

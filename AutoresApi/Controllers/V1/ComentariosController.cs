@@ -6,11 +6,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace AutoresApi.Controllers
+namespace AutoresApi.Controllers.V1
 {
     [ApiController]
-    [Route("api/libros/{libroId}/comentarios")]
-    public class ComentariosController:ControllerBase
+    [Route("api/v1/libros/{libroId}/comentarios")]
+    //[ApiConventionType(typeof(DefaultApiConventions))]
+    public class ComentariosController : ControllerBase
     {
         public AplicationDbContext context { get; }
         public IMapper mapper { get; }
@@ -35,7 +36,7 @@ namespace AutoresApi.Controllers
             context.Add(comentario);
             await context.SaveChangesAsync();
             var comentDTO = mapper.Map<ComentarioDTO>(comentario);
-            return CreatedAtRoute("getCommitById", new { id= comentario.Id, libroId = comentario.LibroId }, comentDTO);
+            return CreatedAtRoute("getCommitById", new { id = comentario.Id, libroId = comentario.LibroId }, comentDTO);
         }
         [HttpGet("getCommits", Name = "getCommits")]
         public async Task<ActionResult<List<ComentarioDTO>>> Get(int libroId)

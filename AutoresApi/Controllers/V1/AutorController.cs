@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AutoresApi;
 using AutoresApi.Models;
 using AutoresApi.DTOs;
 using AutoMapper;
@@ -13,11 +12,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AutoresApi.Utilities;
 
-namespace AutoresApi.Controllers
+namespace AutoresApi.Controllers.V1
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "Es admin")]
     [Route("api/[controller]")]
+    [HeaderVersion("x-version", "1")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "Es admin")]
+    //[Route("api/v1/[controller]")]
     public class AutorController : ControllerBase
     {
         private readonly AplicationDbContext _context;
@@ -26,8 +27,8 @@ namespace AutoresApi.Controllers
         private readonly IAuthorizationService authorizationService;
 
         public AutorController(
-            AplicationDbContext context, 
-            IMapper mapper, 
+            AplicationDbContext context,
+            IMapper mapper,
             IConfiguration configuration,
             IAuthorizationService authorizationService
         )
@@ -42,13 +43,15 @@ namespace AutoresApi.Controllers
         [HttpGet("getAuthors", Name = "getAuthors")]
         [AllowAnonymous]
         [ServiceFilter(typeof(HATEOASAuthorFilterAttribute))]
-        public async Task<ActionResult<List<AutorDTO>>> GetAutores([FromHeader] string? incluirHATEOAS)
+        public async Task<ActionResult<List<AutorDTO>>> GetAutores([FromQuery] PaginacionDTO paginacion  /*[FromHeader] string? incluirHATEOAS*/)
         {
-          if (_context.Autores == null)
-          {
-              return NotFound();
-          }
-            var  autores =  await _context.Autores.ToListAsync();
+            if (_context.Autores == null)
+            {
+                return NotFound();
+            }
+            var queryable = _context.Autores.AsQueryable();
+            await HttpContext.InsertarParametroPaginacionEnCabecera(queryable);
+            var autores = await queryable.OrderBy(autor => autor.Nombre).Paginar(paginacion).ToListAsync();
             var result = _mapper.Map<List<AutorDTO>>(autores);
             return Ok(result);
         }
@@ -57,20 +60,22 @@ namespace AutoresApi.Controllers
         [HttpGet("getAuthorById/{id}", Name = "getAuthorById")]
         [AllowAnonymous]
         [ServiceFilter(typeof(HATEOASAuthorFilterAttribute))]
-        public async Task<ActionResult<AutorDTOConLibros>> GetAutor(int id, [FromHeader] string? incluirHATEOAS)
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult<AutorDTOConLibros>> GetAutor(int id /*[FromHeader] string? incluirHATEOAS*/)
         {
             if (_context.Autores == null)
             {
                 return NotFound();
             }
-            var autor = await _context.Autores.Include(x => x.AutoresLibros).ThenInclude(x => x.Libro).FirstOrDefaultAsync(x=> x.Id == id);
+            var autor = await _context.Autores.Include(x => x.AutoresLibros).ThenInclude(x => x.Libro).FirstOrDefaultAsync(x => x.Id == id);
 
             if (autor == null)
             {
                 return NotFound();
             }
 
-            var dto =  _mapper.Map<AutorDTOConLibros>(autor);
+            var dto = _mapper.Map<AutorDTOConLibros>(autor);
             return dto;
         }
 
@@ -102,7 +107,7 @@ namespace AutoresApi.Controllers
             autor.Id = id;
             try
             {
-                _context.Update(autor); 
+                _context.Update(autor);
                 await _context.SaveChangesAsync();
                 return NoContent();
             }
@@ -125,14 +130,14 @@ namespace AutoresApi.Controllers
         public async Task<ActionResult> PostAutor([FromBody] CrearAutorDTO crearAutorDTO)
         {
             var validateExist = await _context.Autores.AnyAsync(x => x.Nombre == crearAutorDTO.Nombre);
-            
+
             if (validateExist) return BadRequest($"Ya existe un autor con el nombre {crearAutorDTO.Nombre}");
             //Cast
             var autor = _mapper.Map<Autor>(crearAutorDTO);
             _context.Add(autor);
-             await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             var autorDTO = _mapper.Map<AutorDTO>(autor);
-            return CreatedAtRoute("getAuthorById", new { id = autor.Id}, autorDTO);
+            return CreatedAtRoute("getAuthorById", new { id = autor.Id }, autorDTO);
         }
 
         // DELETE: api/Autor/5

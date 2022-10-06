@@ -5,15 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AutoresApi;
 using AutoresApi.Models;
 using AutoresApi.DTOs;
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 
-namespace AutoresApi.Controllers
+namespace AutoresApi.Controllers.V1
 {
-    [Route("api/libro")]
+    [Route("api/v1/libro")]
     [ApiController]
     public class LibroController : ControllerBase
     {
@@ -120,14 +119,14 @@ namespace AutoresApi.Controllers
             return (_context.Libros?.Any(e => e.Id == id)).GetValueOrDefault();
         }
 
-        [HttpPatch("patchBook/{id}", Name = "patchBook")] 
+        [HttpPatch("patchBook/{id}", Name = "patchBook")]
         public async Task<ActionResult> PatchLibro(int id, JsonPatchDocument<LibroPatchDTO> patchDocument)
         {
             if (patchDocument == null)
             {
                 return BadRequest();
             }
-            var libroDb = await _context.Libros.FirstOrDefaultAsync(x=> x.Id == id);
+            var libroDb = await _context.Libros.FirstOrDefaultAsync(x => x.Id == id);
 
             if (libroDb == null)
             {

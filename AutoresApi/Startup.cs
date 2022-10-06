@@ -2,6 +2,7 @@
 using AutoresApi.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
+[assembly: ApiConventionType(typeof(DefaultApiConventions))]
 namespace AutoresApi
 {
     public class Startup
@@ -25,7 +27,10 @@ namespace AutoresApi
         
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers().AddNewtonsoftJson();
+            services.AddControllers(opciones =>
+            {
+                opciones.Conventions.Add(new SwaggerAgrupaVersion());
+            }).AddNewtonsoftJson();
             services.AddDbContext<AplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("defaultConnection"))
             );
@@ -42,7 +47,28 @@ namespace AutoresApi
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(s =>
             {
-                s.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApiAutores", Version = "v1" });
+                s.SwaggerDoc("v1", new OpenApiInfo {
+                    Title = "WebApiAutores", 
+                    Version = "v1",
+                    Description = "WebApi para autores y lirbos",
+                    Contact = new OpenApiContact
+                    {
+                        Email = "i.licona@gmail.com",
+                        Name = "Jose Ignacio Licona",
+                    }
+                });
+                s.SwaggerDoc("v2", new OpenApiInfo { 
+                    Title = "WebApiAutores", 
+                    Version = "v2",
+                    Description = "WebApi para autores y lirbos",
+                    Contact = new OpenApiContact
+                    {
+                        Email = "i.licona@gmail.com",
+                        Name = "Jose Ignacio Licona",
+                    }
+                });
+                s.OperationFilter<AgregarParametroHATEOAS>();
+                s.OperationFilter<AgregarParametroXVersion>();
                 s.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -84,7 +110,7 @@ namespace AutoresApi
                 opciones.AddDefaultPolicy(builder =>
                 {
                     //allow any origin
-                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders();
+                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders(new string[] { "CantidadTotalRegistros" });
                     //allow specific origin
                     //builder.WithOrigins("https://www.apirequest.io").AllowAnyMethod().AllowAnyHeader().WithExposedHeaders();
                 });
@@ -100,7 +126,11 @@ namespace AutoresApi
             if (env.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(s =>
+                {
+                    s.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApiAutores v1");
+                    s.SwaggerEndpoint("/swagger/v2/swagger.json", "WebApiAutores v2");
+                });
             }
 
             app.UseCors();

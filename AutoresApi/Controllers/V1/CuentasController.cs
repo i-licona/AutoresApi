@@ -12,11 +12,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using AutoresApi.Servicios;
 
-namespace AutoresApi.Controllers
+namespace AutoresApi.Controllers.V1
 {
     [ApiController]
-    [Route("api/cuentas")]
-    public class CuentasController: ControllerBase
+    [Route("api/v1/cuentas")]
+    public class CuentasController : ControllerBase
     {
         private readonly UserManager<IdentityUser> userManager;
         private readonly IConfiguration configuration;
@@ -37,18 +37,19 @@ namespace AutoresApi.Controllers
             this.signInManager = signInManager;
             this.hashService = hashService;
             dataProtector = dataProtectionProvider.CreateProtector("valor_unico_y_secreto");
-            
+
         }
 
         [HttpGet("hash/{textoPlano}")]
         public ActionResult RealizarHash(string textoPlano)
         {
-            var resultado1 = this.hashService.Hash(textoPlano);
-            var resultado2 = this.hashService.Hash(textoPlano);
+            var resultado1 = hashService.Hash(textoPlano);
+            var resultado2 = hashService.Hash(textoPlano);
 
-            return Ok(new {
-                resultado1 = resultado1,
-                resultado2 = resultado2 
+            return Ok(new
+            {
+                resultado1,
+                resultado2
             });
 
         }
@@ -57,13 +58,13 @@ namespace AutoresApi.Controllers
         public ActionResult Encriptar()
         {
             var textoPlano = "Jose Ignacio";
-            var textoCifrado = dataProtector.Protect(textoPlano); 
+            var textoCifrado = dataProtector.Protect(textoPlano);
             var textoDesencriptado = dataProtector.Unprotect(textoCifrado);
             return Ok(new
             {
-                textoPlano = textoPlano,
-                textoCifrado = textoCifrado,
-                textoDesencriptado = textoDesencriptado,
+                textoPlano,
+                textoCifrado,
+                textoDesencriptado,
             });
         }
 
@@ -72,14 +73,14 @@ namespace AutoresApi.Controllers
         {
             var protectorLimitadoPorTiempo = dataProtector.ToTimeLimitedDataProtector();
             var textoPlano = "Jose Ignacio";
-            var textoCifrado = protectorLimitadoPorTiempo.Protect(textoPlano,lifetime:TimeSpan.FromSeconds(5));
+            var textoCifrado = protectorLimitadoPorTiempo.Protect(textoPlano, lifetime: TimeSpan.FromSeconds(5));
             Thread.Sleep(6000);
             var textoDesencriptado = protectorLimitadoPorTiempo.Unprotect(textoCifrado);
             return Ok(new
             {
-                textoPlano = textoPlano,
-                textoCifrado = textoCifrado,
-                textoDesencriptado = textoDesencriptado,
+                textoPlano,
+                textoCifrado,
+                textoDesencriptado,
             });
         }
 
@@ -130,14 +131,14 @@ namespace AutoresApi.Controllers
         }
 
         [HttpPost("doAdmin", Name = "doAdmin")]
-        
+
         public async Task<ActionResult> HacerAdmin(EditarAdminDTO editarAdminDTO)
         {
             var usuario = await userManager.FindByEmailAsync(editarAdminDTO.Email);
             await userManager.AddClaimAsync(usuario, new Claim("esAdmin", "true"));
             return NoContent();
         }
-        
+
         [HttpPost("removeAdmin", Name = "removeAdmin")]
         public async Task<ActionResult> RemoverAdmin(EditarAdminDTO editarAdminDTO)
         {
@@ -170,7 +171,7 @@ namespace AutoresApi.Controllers
                 Expiracion = expiracion,
                 Rol = claimsDB
             };
-            
+
         }
     }
 }
