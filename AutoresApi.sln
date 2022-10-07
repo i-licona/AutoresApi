@@ -5,7 +5,12 @@ VisualStudioVersion = 17.2.32602.215
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoresApi", "AutoresApi\AutoresApi.csproj", "{050E57D2-BF94-4DC7-B2C1-BB858C4D322F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoresApi.Tests", "AutoresApi.Tests\AutoresApi.Tests.csproj", "{F0C3A3A2-7E13-4BDE-A2EF-F926CF5DFB6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoresApi.Tests", "AutoresApi.Tests\AutoresApi.Tests.csproj", "{F0C3A3A2-7E13-4BDE-A2EF-F926CF5DFB6E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{783B5652-EE3D-4C59-8814-55284EC2E5F9}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
