@@ -125,13 +125,15 @@ namespace AutoresApi
         {
             if (env.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI(s =>
-                {
-                    s.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApiAutores v1");
-                    s.SwaggerEndpoint("/swagger/v2/swagger.json", "WebApiAutores v2");
-                });
+                
             }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(s =>
+            {
+                s.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApiAutores v1");
+                s.SwaggerEndpoint("/swagger/v2/swagger.json", "WebApiAutores v2");
+            });
 
             app.UseCors();
 
