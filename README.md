@@ -9,7 +9,7 @@ Aplicar los siguientes comandos
   dotnet add package Microsoft.EntityFrameworkCore.SqlServer
   dotnet add package Microsoft.EntityFrameworkCore.Design   
   dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
-
+Ejecutar dotnet tool install --global dotnet-ef
 
 una vez echo aplicar el siguiente comando
   dotnet ef migrations add nombrequetuquieras
